@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Scan from './Scan.jsx'
 
 const MEALS = ['Breakfast', 'Lunch', 'Snacks', 'Dinner']
 const rd = n => Math.round(n)
