@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import Diary from './Diary.jsx'
+import Progress from './Progress.jsx'
+import Coach from './Coach.jsx'
+import Settings from './Settings.jsx'
 
 const ACTIVITY = [
   { label: 'Sitting most of the day', f: 1.2 },
@@ -11,6 +14,12 @@ const GOALS = [
   { label: 'Lose weight', adj: -400, protein: 1.6 },
   { label: 'Maintain weight', adj: 0, protein: 1.2 },
   { label: 'Gain weight', adj: 300, protein: 1.6 },
+]
+const TABS = [
+  { id: 'diary', label: 'Diary', icon: '🍽️' },
+  { id: 'progress', label: 'Progress', icon: '📈' },
+  { id: 'coach', label: 'Coach', icon: '💬' },
+  { id: 'settings', label: 'Settings', icon: '⚙️' },
 ]
 
 function calculate(p) {
@@ -91,50 +100,50 @@ function Onboarding({ onSave }) {
       >
         Calculate my targets
       </button>
-    </div>
-  )
-}
-
-function Home({ profile, onReset }) {
-  const t = profile.targets
-  const Box = ({ label, value, unit }) => (
-    <div className="bg-white rounded-xl p-4 text-center shadow">
-      <div className="text-2xl font-bold text-green-700">{value}<span className="text-sm"> {unit}</span></div>
-      <div className="text-gray-600 text-sm">{label}</div>
-    </div>
-  )
-  return (
-    <div className="max-w-md mx-auto p-5 space-y-4">
-      <h1 className="text-2xl font-bold text-green-700">Your daily targets</h1>
-      <div className="bg-green-600 text-white rounded-2xl p-6 text-center">
-        <div className="text-5xl font-bold">{t.calories}</div>
-        <div>calories per day</div>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <Box label="Protein" value={t.protein} unit="g" />
-        <Box label="Carbs" value={t.carbs} unit="g" />
-        <Box label="Fat" value={t.fat} unit="g" />
-      </div>
-        <Diary targets={t} />
       <p className="text-xs text-gray-500">
-        These are estimates from a standard formula, not medical advice. If you have a health condition, check your targets with a doctor or dietitian.
+        Targets are estimates from a standard formula, not medical advice. If you have a health condition, check them with a doctor or dietitian.
       </p>
-      <button onClick={onReset} className="w-full border border-green-600 text-green-700 rounded-lg p-3">
-        Edit my details
-      </button>
     </div>
   )
 }
 
 export default function App() {
   const [profile, setProfile] = useState(loadProfile())
-  const reset = () => {
+  const [tab, setTab] = useState('diary')
+
+  const editProfile = () => {
     localStorage.removeItem('profile')
     setProfile(null)
   }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-green-50">
+        <Onboarding onSave={setProfile} />
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-green-50">
-      {profile ? <Home profile={profile} onReset={reset} /> : <Onboarding onSave={setProfile} />}
+    <div className="min-h-screen bg-green-50 pb-24">
+      <div className="max-w-md mx-auto p-4">
+        {tab === 'diary' && <Diary targets={profile.targets} />}
+        {tab === 'progress' && <Progress profile={profile} />}
+        {tab === 'coach' && <Coach profile={profile} />}
+        {tab === 'settings' && <Settings onEditProfile={editProfile} />}
+      </div>
+      <nav className="fixed bottom-0 inset-x-0 bg-white border-t flex">
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={'flex-1 py-3 text-xs ' + (tab === t.id ? 'text-green-700 font-bold' : 'text-gray-500')}
+          >
+            <div className="text-xl">{t.icon}</div>
+            {t.label}
+          </button>
+        ))}
+      </nav>
     </div>
   )
 }
