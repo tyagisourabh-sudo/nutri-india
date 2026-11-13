@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Diary from './Diary.jsx'
 
 const ACTIVITY = [
   { label: 'Sitting most of the day', f: 1.2 },
@@ -114,6 +115,7 @@ function Home({ profile, onReset }) {
         <Box label="Carbs" value={t.carbs} unit="g" />
         <Box label="Fat" value={t.fat} unit="g" />
       </div>
+        <Diary targets={t} />
       <p className="text-xs text-gray-500">
         These are estimates from a standard formula, not medical advice. If you have a health condition, check your targets with a doctor or dietitian.
       </p>
