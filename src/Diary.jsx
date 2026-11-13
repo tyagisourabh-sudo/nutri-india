@@ -164,13 +164,15 @@ export default function Diary({ targets }) {
   const sum = k => todays.reduce((s, l) => s + (l[k] || 0), 0)
 
   const add = entry => {
-    save([...logs, { ...entry, id: Date.now(), date: day }])
+        const list = Array.isArray(entry) ? entry : [entry]
+    save([...logs, ...list.map((e, i) => ({ ...e, id: Date.now() + i, date: day }))])
     setAdding(null)
   }
   const remove = id => save(logs.filter(l => l.id !== id))
 
   return (
     <div className="space-y-4">
+      <Scan onAdd={add} />
       <div className="bg-white rounded-xl p-4 shadow space-y-3">
         <h2 className="font-bold text-green-700">Today</h2>
         <Bar label="Calories" value={sum('cal')} target={targets.calories} unit="kcal" />
