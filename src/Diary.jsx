@@ -53,6 +53,8 @@ function AddFood({ meal, foods, onAdd, onClose }) {
     onAdd({
       meal,
       name: pick.n,
+      qty: servings,
+      unit: pick.s,
       grams: rd(grams),
       cal: pick.k * x,
       p: pick.p * x,
@@ -190,7 +192,7 @@ export default function Diary({ targets }) {
             {items.map(l => (
               <div key={l.id} className="flex justify-between items-center border-t mt-2 pt-2 text-sm">
                 <span>
-                  {l.name}{l.grams ? ` · ${l.grams} g` : ''}
+                  {l.name}{l.qty ? ` · ${l.qty} × ${l.unit}` : ''}{l.grams ? ` (${l.grams} g)` : ''}
                   <span className="text-gray-500"> · {rd(l.cal)} kcal</span>
                 </span>
                 <button onClick={() => remove(l.id)} className="text-red-600 px-2">✕</button>
