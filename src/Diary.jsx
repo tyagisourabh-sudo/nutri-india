@@ -3,23 +3,27 @@ import Scan from './Scan.jsx'
 
 const MEALS = ['Breakfast', 'Lunch', 'Snacks', 'Dinner']
 const rd = n => Math.round(n)
+const box = 'w-full border border-gray-300 rounded-lg p-3 text-base bg-white'
 
-function today() {
-  const d = new Date()
+function fmt(d) {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${m}-${day}`
 }
 
-function loadLogs() {
-  try {
-    return JSON.parse(localStorage.getItem('logs')) || []
-  } catch {
-    return []
-  }
+function shift(day, n) {
+  const [y, m, d] = day.split('-').map(Number)
+  return fmt(new Date(y, m - 1, d + n))
 }
 
-const box = 'w-full border border-gray-300 rounded-lg p-3 text-base bg-white'
+function load(key, fallback) {
+  try {
+    const v = JSON.parse(localStorage.getItem(key))
+    return v === null || v === undefined ? fallback : v
+  } catch {
+    return fallback
+  }
+}
 
 function Bar({ label, value, target, unit }) {
   const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0
@@ -145,9 +149,11 @@ function AddFood({ meal, foods, onAdd, onClose }) {
 
 export default function Diary({ targets }) {
   const [foods, setFoods] = useState([])
-  const [logs, setLogs] = useState(loadLogs())
+  const [logs, setLogs] = useState(load('logs', []))
+  const [water, setWater] = useState(load('water', {}))
   const [adding, setAdding] = useState(null)
-  const day = today()
+  const [day, setDay] = useState(fmt(new Date()))
+  const todayStr = fmt(new Date())
 
   useEffect(() => {
     fetch(import.meta.env.BASE_URL + 'foods.json')
@@ -165,21 +171,49 @@ export default function Diary({ targets }) {
   const sum = k => todays.reduce((s, l) => s + (l[k] || 0), 0)
 
   const add = entry => {
-        const list = Array.isArray(entry) ? entry : [entry]
+    const list = Array.isArray(entry) ? entry : [entry]
     save([...logs, ...list.map((e, i) => ({ ...e, id: Date.now() + i, date: day }))])
     setAdding(null)
   }
   const remove = id => save(logs.filter(l => l.id !== id))
 
+  const ml = water[day] || 0
+  const addWater = n => {
+    const next = { ...water, [day]: Math.max(0, ml + n) }
+    setWater(next)
+    localStorage.setItem('water', JSON.stringify(next))
+  }
+
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <button onClick={() => setDay(shift(day, -1))} className="px-4 py-2 bg-white rounded-lg shadow">◀</button>
+        <div className="font-bold text-green-700">{day === todayStr ? 'Today' : day}</div>
+        <button
+          disabled={day === todayStr}
+          onClick={() => setDay(shift(day, 1))}
+          className="px-4 py-2 bg-white rounded-lg shadow disabled:opacity-30"
+        >
+          ▶
+        </button>
+      </div>
+
       <Scan onAdd={add} />
+
       <div className="bg-white rounded-xl p-4 shadow space-y-3">
-        <h2 className="font-bold text-green-700">Today</h2>
+        <h2 className="font-bold text-green-700">Totals</h2>
         <Bar label="Calories" value={sum('cal')} target={targets.calories} unit="kcal" />
         <Bar label="Protein" value={sum('p')} target={targets.protein} unit="g" />
         <Bar label="Carbs" value={sum('c')} target={targets.carbs} unit="g" />
         <Bar label="Fat" value={sum('f')} target={targets.fat} unit="g" />
+      </div>
+
+      <div className="bg-white rounded-xl p-4 shadow flex items-center justify-between">
+        <div>💧 Water: <b>{ml} ml</b></div>
+        <div className="flex gap-2">
+          <button onClick={() => addWater(-250)} className="border rounded-lg px-3 py-1">−250</button>
+          <button onClick={() => addWater(250)} className="bg-green-600 text-white rounded-lg px-3 py-1">+250</button>
+        </div>
       </div>
 
       {MEALS.map(meal => {
